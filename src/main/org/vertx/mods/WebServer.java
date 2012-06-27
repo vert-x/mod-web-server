@@ -78,7 +78,7 @@ public class WebServer extends BusModBase implements Handler<HttpServerRequest> 
   public void handle(HttpServerRequest req) {
     if (req.path.equals("/")) {
       req.response.sendFile(indexPage);
-    } else if (!req.path.contains("..")) {
+    } else if (!req.path.contains("src")) {
       req.response.sendFile(webRootPrefix + req.path);
     } else {
       req.response.statusCode = 404;
