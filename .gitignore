@@ -1,3 +1,9 @@
+.classpath
+.gradle
 .idea
-mod-web-server.iml
+.project
+.settings
+mod-auth-mgr.iml
+bin
+build
 out
