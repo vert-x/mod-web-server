@@ -20,8 +20,8 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-        classpath "org.vert-x:build-tools:$vertxBuildToolsVersion"
-        classpath "org.vert-x:gradle-plugin:$vertxGradlePluginVersion"
+    classpath "org.vert-x:build-tools:$vertxBuildToolsVersion"
+    classpath "org.vert-x:gradle-plugin:$vertxGradlePluginVersion"
 	}
 }
 
@@ -36,30 +36,30 @@ sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
 repositories {
-    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-    mavenCentral()
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+  mavenCentral()
 }
 
 dependencies {
-    vertxProvided("org.vert-x:vertx-core:$vertxVersion")
-    vertxProvided("org.vert-x:vertx-platform:$vertxVersion")
+  vertxProvided("org.vert-x:vertx-core:$vertxVersion")
+  vertxProvided("org.vert-x:vertx-platform:$vertxVersion")
 
-    testCompile("org.vert-x:vertx-core:$vertxVersion")
-    testCompile("org.vert-x:vertx-platform:$vertxVersion")
-    testCompile("org.vert-x:vertx-lang-java:$vertxVersion")
-    testCompile("org.vert-x:vertx-lang-rhino:$vertxVersion")
-    testCompile("org.mozilla:rhino:$rhinoVersion")
+  testCompile("org.vert-x:vertx-core:$vertxVersion")
+  testCompile("org.vert-x:vertx-platform:$vertxVersion")
+  testCompile("org.vert-x:vertx-lang-java:$vertxVersion")
+  testCompile("org.vert-x:vertx-lang-rhino:$vertxVersion")
+  testCompile("org.mozilla:rhino:$rhinoVersion")
 
-    testCompile("org.vert-x:vertx-testframework:$vertxVersion") {
-        transitive = false // don't need all of the other language deps
-    }
+  testCompile("org.vert-x:vertx-testframework:$vertxVersion") {
+    transitive = false // don't need all of the other language deps
+  }
 
-    testCompile "junit:junit:$junitVersion"
+  testCompile "junit:junit:$junitVersion"
 }
 
 test {
-    systemProperty 'vertx.test.timeout', 15
-    systemProperty 'vertx.mods', "$projectDir/build/tmp/test-mods"
+  systemProperty 'vertx.test.timeout', 15
+  systemProperty 'vertx.mods', "$projectDir/build/tmp/test-mods"
 }
 
 task collectDeps(type: Copy) {
