@@ -15,14 +15,14 @@
  */
 
 buildscript {
-	repositories {
-		maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-		mavenCentral()
-	}
-	dependencies {
-        classpath "org.vert-x:build-tools:$vertxBuildToolsVersion"
-        classpath "org.vert-x:gradle-plugin:$vertxGradlePluginVersion"
-	}
+..repositories {
+....maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+....mavenCentral()
+..}
+..dependencies {
+    classpath "org.vert-x:build-tools:$vertxBuildToolsVersion"
+    classpath "org.vert-x:gradle-plugin:$vertxGradlePluginVersion"
+..}
 }
 
 apply from: 'gradle/setup.gradle'
@@ -36,31 +36,38 @@ sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
 repositories {
-    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-    mavenCentral()
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+  mavenCentral()
 }
 
 dependencies {
-    vertxProvided("org.vert-x:vertx-core:$vertxVersion")
-    vertxProvided("org.vert-x:vertx-platform:$vertxVersion")
+  vertxProvided("org.vert-x:vertx-core:$vertxVersion")
+  vertxProvided("org.vert-x:vertx-platform:$vertxVersion")
 
-    testCompile("org.vert-x:vertx-core:$vertxVersion")
-    testCompile("org.vert-x:vertx-platform:$vertxVersion")
-    testCompile("org.vert-x:vertx-lang-java:$vertxVersion")
-    testCompile("org.vert-x:vertx-lang-rhino:$vertxVersion")
-    testCompile("org.mozilla:rhino:$rhinoVersion")
+  testCompile("org.vert-x:vertx-core:$vertxVersion")
+  testCompile("org.vert-x:vertx-platform:$vertxVersion")
+  testCompile("org.vert-x:vertx-lang-java:$vertxVersion")
+  testCompile("org.vert-x:vertx-lang-rhino:$vertxVersion")
+  testCompile("org.mozilla:rhino:$rhinoVersion")
 
-    testCompile("org.vert-x:vertx-testframework:$vertxVersion") {
-        transitive = false // don't need all of the other language deps
-    }
+  testCompile("org.vert-x:vertx-testframework:$vertxVersion") {
+    transitive = false // don't need all of the other language deps
+  }
 
-    testCompile "junit:junit:$junitVersion"
+  testCompile "junit:junit:$junitVersion"
 }
 
 test {
-    systemProperty 'vertx.test.timeout', 15
-    systemProperty 'vertx.mods', "$projectDir/build/tmp/test-mods"
+  systemProperty 'vertx.test.timeout', 15
+  systemProperty 'vertx.mods', "$projectDir/build/tmp/mod-test"
+  testLogging.showStandardStreams = true
 }
+
+task prepareVertxTest(type: Sync, dependsOn: ['prepareVertxModule']) {
+  from 'build/mod'
+  into 'build/tmp/mod-test'
+}
+test.dependsOn prepareVertxTest
 
 task collectDeps(type: Copy) {
   group = 'vert.x'
