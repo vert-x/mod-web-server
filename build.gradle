@@ -34,6 +34,7 @@ defaultTasks = ['assemble']
 
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
+jar.enabled = false // we don't need this
 
 repositories {
   maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
