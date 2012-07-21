@@ -45,8 +45,6 @@ dependencies {
   vertxProvided("org.vert-x:vertx-core:$vertxVersion")
   vertxProvided("org.vert-x:vertx-platform:$vertxVersion")
 
-  compile "io.netty:netty:$nettyVersion"
-
   testCompile("org.vert-x:vertx-core:$vertxVersion")
   testCompile("org.vert-x:vertx-platform:$vertxVersion")
   testCompile("org.vert-x:vertx-lang-java:$vertxVersion")
