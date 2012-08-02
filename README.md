@@ -18,11 +18,12 @@ The web-server configuration is as follows:
         "host", <host>,
         "port", <port>
         "static_files": <static_files>,
-        
-        "ssl": <ssl>,        
+        "gzip_files": <gzip_files>
+
+        "ssl": <ssl>,
         "key_store_password": <key_store_password>,
         "key_store_path": <key_store_path>,
-        
+
         "bridge": <bridge>,
         "inbound_permitted": <inbound_permitted>,
         "outbound_permitted": <outbound_permitted>,
@@ -30,12 +31,13 @@ The web-server configuration is as follows:
         "auth_timeout": <auth_timeout>,
         "auth_address": <auth_address>
     }
-    
+
 * `web_root`. This is the root directory from where files will be served. *Anything that you place here or in sub directories will be externally accessible*. Default is `web`.
 * `index_page`. The page to serve when the root `/` is requested. Default is `index.html`.
 * `host`. The host or ip address to listen at for connections. `0.0.0.0` means listen at all available addresses. Default is `0.0.0.0`.
 * `port`. The port to listen at for connections. Default is `80`.
-* `static_files`. Should the server serve static files? Default is `true`. 
+* `static_files`. Should the server serve static files? Default is `true`.
+* `gzip_files`. Should the server serve pre-compressed files? `true`: check file "fileName.gz", and send it back, if not found, then fallback to "fileName". `false`: send back "fileName", do not check "fileName.gz" unnecessarily. Default is `false`.
 * `ssl`. Should the server use `https` as a protocol? Default is `false`.
 * `key_store_password`. Password of Java keystore which holds the server certificate. Only used if `ssl` is `true`. Default is `wibble`.
 * `key_store_path`. Path to keystore which holds the server certificate. Default is `server-keystore.jks`. Only used if `ssl` is `true`. *Don't put the keystore under your webroot!*.
@@ -44,7 +46,7 @@ The web-server configuration is as follows:
 * `outbound_permitted`. This is an array of JSON objects representing the outbound permitted matches on the bridge. Only used if `bridge` is `true`. See the core manual for a full description of what these are. Defaults to `[]`.
 * `sjs_config`. This is a JSON object representing the configuration of the SockJS bridging application. You'd normally use this for specifying the url at which SockJS will connect to bridge from client side JS to the server. Only used if `bridge` is `true`. Default to `{"prefix": "/eventbus"}`.
 * `auth_timeout`. The bridge can also cache authorisations. This determines how long the bridge will cache one for. Default value is five minutes.
-* `auth_address`. The bridge can also call an authorisation manager to do authorisation. This is the address to which it will send authorisation messages. Default value is `vertx.basicauthmanager.authorise`. 
+* `auth_address`. The bridge can also call an authorisation manager to do authorisation. This is the address to which it will send authorisation messages. Default value is `vertx.basicauthmanager.authorise`.
 
 
 ## Examples
@@ -53,12 +55,12 @@ Here are some examples:
 
 ### Simple static file web server
 
-This serves files from the web directory 
+This serves files from the web directory
 
     {
-        "host": mycompany.com        
+        "host": mycompany.com
     {
-    
+
 ### Simple https server
 
     {
@@ -66,8 +68,8 @@ This serves files from the web directory
         "ssl": true,
         "key_store_path": "mycert.jks",
         "key_store_password": "sausages"
-    }    
-    
+    }
+
 ### Event bus bridge
 
 Pure event bus bridge that doesn't serve static files
