@@ -66,27 +66,27 @@ Please edit the details below.
  */
 def configurePom(def pom) {
   pom.project {
-    description 'Description of your module here'
-    inceptionYear '2013'
+    description 'Simple Web Server Module for Vert.x'
+    inceptionYear '2012'
     packaging 'zip'
-    url 'Your project url'
+    url 'https://github.com/vert-x/mod-web-server'
 
     developers {
       developer {
-        id 'developer id (e.g. github username)'
-        name 'developer name'
-        email 'developer email'
+        id 'purplefox'
+        name 'Tim Fox'
+        // email 'developer email'
       }
     }
 
     scm {
-      url 'url to your repo - e.g. github repo url'
+      url 'https://github.com/vert-x/mod-web-server.git'
     }
 
     licenses {
       license {
-        name 'The name of the license used, e.g.: The Apache Software License, Version 2.0'
-        url 'URl to the license, e.g.: http://www.apache.org/licenses/LICENSE-2.0.txt'
+        name 'The Apache Software License, Version 2.0'
+        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
         distribution 'repo'
       }
     }
