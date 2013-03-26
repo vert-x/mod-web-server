@@ -96,3 +96,14 @@ def configurePom(def pom) {
     }
   }
 }
+// Map the 'provided' dependency configuration to the appropriate IDEA visibility scopes.
+plugins.withType(IdeaPlugin) {
+  idea {
+    module {
+      scopes.PROVIDED.plus += configurations.provided
+      scopes.COMPILE.minus += configurations.provided
+      scopes.TEST.minus += configurations.provided
+      scopes.RUNTIME.minus += configurations.provided
+    }
+  }
+}
