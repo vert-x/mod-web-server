@@ -18,7 +18,7 @@ package org.vertx.mods;
 
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.file.impl.PathAdjuster;
+import org.vertx.java.core.VoidResult;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -43,8 +43,8 @@ public class WebServer extends BusModBase implements Handler<HttpServerRequest> 
   private String indexPage;
   private boolean gzipFiles;
 
-  public void start() {
-    super.start();
+  public void start(final VoidResult result) {
+    start();
 
     HttpServer server = vertx.createHttpServer();
 
@@ -75,7 +75,12 @@ public class WebServer extends BusModBase implements Handler<HttpServerRequest> 
     webRootPrefix = webRoot + File.separator;
     indexPage = webRootPrefix + index;
 
-    server.listen(getOptionalIntConfig("port", 80), getOptionalStringConfig("host", "0.0.0.0"));
+    server.listen(getOptionalIntConfig("port", 80), getOptionalStringConfig("host", "0.0.0.0"), new Handler<HttpServer>() {
+      @Override
+      public void handle(HttpServer event) {
+        result.setResult();
+      }
+    });
   }
 
   public void handle(HttpServerRequest req) {
