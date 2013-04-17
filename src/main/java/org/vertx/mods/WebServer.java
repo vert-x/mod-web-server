@@ -17,8 +17,8 @@
 package org.vertx.mods;
 
 import org.vertx.java.busmods.BusModBase;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.VoidResult;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -43,7 +43,7 @@ public class WebServer extends BusModBase implements Handler<HttpServerRequest> 
   private String indexPage;
   private boolean gzipFiles;
 
-  public void start(final VoidResult result) {
+  public void start(final Future<Void> result) {
     start();
 
     HttpServer server = vertx.createHttpServer();
@@ -78,7 +78,7 @@ public class WebServer extends BusModBase implements Handler<HttpServerRequest> 
     server.listen(getOptionalIntConfig("port", 80), getOptionalStringConfig("host", "0.0.0.0"), new Handler<HttpServer>() {
       @Override
       public void handle(HttpServer event) {
-        result.setResult();
+        result.setResult(null);
       }
     });
   }
@@ -87,29 +87,29 @@ public class WebServer extends BusModBase implements Handler<HttpServerRequest> 
     // browser gzip capability check
     String acceptEncoding = req.headers().get("accept-encoding");
     boolean acceptEncodingGzip = acceptEncoding == null ? false : acceptEncoding.contains("gzip");
-    String fileName = webRootPrefix + req.path;
+    String fileName = webRootPrefix + req.path();
     try {
-      if (req.path.equals("/")) {
-        req.response.sendFile(indexPage);
-      } else if (!req.path.contains("..")) {
+      if (req.path().equals("/")) {
+        req.response().sendFile(indexPage);
+      } else if (!req.path().contains("..")) {
         // try to send *.gz file
         if (gzipFiles && acceptEncodingGzip) {
           boolean exists = vertx.fileSystem().existsSync(fileName + ".gz");
           if (exists) {
             // found file with gz extension
-            req.response.putHeader("content-encoding", "gzip");
-            req.response.sendFile(fileName + ".gz");
+            req.response().putHeader("content-encoding", "gzip");
+            req.response().sendFile(fileName + ".gz");
           } else {
             // not found gz file, try to send uncompressed file
-            req.response.sendFile(fileName);
+            req.response().sendFile(fileName);
           }
         } else {
           // send not gzip file
-          req.response.sendFile(fileName);
+          req.response().sendFile(fileName);
         }
       } else {
-        req.response.statusCode = 404;
-        req.response.end();
+        req.response().setStatusCode(404);
+        req.response().end();
       }
     } catch (Exception e) {
       throw new IllegalStateException("Failed to check file");
