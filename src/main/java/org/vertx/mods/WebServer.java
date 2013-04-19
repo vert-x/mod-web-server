@@ -17,6 +17,8 @@
 package org.vertx.mods;
 
 import org.vertx.java.busmods.BusModBase;
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpServer;
@@ -75,10 +77,14 @@ public class WebServer extends BusModBase implements Handler<HttpServerRequest> 
     webRootPrefix = webRoot + File.separator;
     indexPage = webRootPrefix + index;
 
-    server.listen(getOptionalIntConfig("port", 80), getOptionalStringConfig("host", "0.0.0.0"), new Handler<HttpServer>() {
+    server.listen(getOptionalIntConfig("port", 80), getOptionalStringConfig("host", "0.0.0.0"), new AsyncResultHandler<HttpServer>() {
       @Override
-      public void handle(HttpServer event) {
-        result.setResult(null);
+      public void handle(AsyncResult<HttpServer> ar) {
+        if (!ar.succeeded()) {
+          result.setFailure(ar.cause());
+        } else {
+          result.setResult(null);
+        }
       }
     });
   }
