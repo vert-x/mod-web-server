@@ -1,7 +1,3 @@
-import org.vertx.java.core.Handler
-import org.vertx.java.platform.PlatformLocator
-import org.vertx.java.platform.impl.ModuleClassLoader
-
 /*
  * Copyright 2012 the original author or authors.
  *
@@ -18,13 +14,18 @@ import org.vertx.java.platform.impl.ModuleClassLoader
  * limitations under the License.
  */
 
+import org.vertx.java.core.AsyncResult
+import org.vertx.java.core.AsyncResultHandler
+import org.vertx.java.platform.PlatformLocator
+import org.vertx.java.platform.impl.ModuleClassLoader
+
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
-
-// We load some extra properties from vertx.properties
-loadProperties("vertx.properties")
 
 // We  have to explicitly load props from the user home dir - on CI we set
 // GRADLE_USER_HOME to a different dir to avoid problems with concurrent builds corrupting
@@ -33,7 +34,6 @@ loadProperties("${System.getProperty('user.home')}/.gradle/gradle.properties")
 
 apply from: "gradle/maven.gradle"
 
-version = project.ext.version
 group = modowner
 archivesBaseName = modname
 
@@ -55,7 +55,7 @@ configurations {
 }
 
 repositories {
-  if (System.getenv("JENKINS_HOME") == null) {
+  if (System.getenv("VERTX_DISABLE_MAVENLOCAL") == null) {
     // We don't want to use mavenLocal when running on CI - mavenLocal is only useful in Gradle for
     // publishing artifacts locally for development purposes - maven local is also not threadsafe when there
     // are concurrent builds
@@ -76,7 +76,12 @@ dependencies {
 buildscript {
 
   repositories {
-    mavenLocal()
+    if (System.getenv("VERTX_DISABLE_MAVENLOCAL") == null) {
+      // We don't want to use mavenLocal when running on CI - mavenLocal is only useful in Gradle for
+      // publishing artifacts locally for development purposes - maven local is also not threadsafe when there
+      // are concurrent builds
+      mavenLocal()
+    }
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     mavenCentral()
   }
@@ -137,20 +142,30 @@ test {
 task runMod(dependsOn: copyMod, description: 'Run the module using all the build dependencies (not using installed vertx') << {
   ModuleClassLoader.reverseLoadOrder = false
   def pm = PlatformLocator.factory.createPlatformManager()
-  pm.deployModule(moduleName, null, 1, new Handler<String>() {
-    public void handle(String deploymentID) {
-      System.out.println("CTRL-C to stop server")
+  def latch = new CountDownLatch(1)
+  pm.deployModule(moduleName, null, 1, new AsyncResultHandler<String>() {
+    public void handle(AsyncResult<String> asyncResult) {
+      if (asyncResult.succeeded()) {
+        println "CTRL-C to stop server"
+      } else {
+        println "Failed to deploy module"
+        asyncResult.cause().printStackTrace()
+        latch.countDown()
+      }
     }
   });
-  Thread.sleep(Long.MAX_VALUE);
+  latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 }
 
 task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module dependencies for the module into the nested mods directory') << {
   if (pullInDeps == 'true') {
     def pm = PlatformLocator.factory.createPlatformManager()
-    System.out.println("Pulling in dependencies for module " + moduleName + " Please wait")
-    pm.pullInDependencies(moduleName)
-    System.out.println("Dependencies pulled into mods directory of module")
+    println "Pulling in dependencies for module $moduleName. Please wait"
+    if (pm.pullInDependencies(moduleName)) {
+      println "Dependencies pulled into mods directory of module"
+    } else {
+      println "Failed to pull in dependencies"
+    }
   }
 }
 
@@ -161,6 +176,18 @@ def loadProperties(String sourceFileName) {
     config.load(new FileInputStream(propFile))
     for (Map.Entry property in config) {
       project.ext[property.key] = property.value;
+    }
+  }
+}
+
+// Map the 'provided' dependency configuration to the appropriate IDEA visibility scopes.
+plugins.withType(IdeaPlugin) {
+  idea {
+    module {
+      scopes.PROVIDED.plus += configurations.provided
+      scopes.COMPILE.minus += configurations.provided
+      scopes.TEST.minus += configurations.provided
+      scopes.RUNTIME.minus += configurations.provided
     }
   }
 }
