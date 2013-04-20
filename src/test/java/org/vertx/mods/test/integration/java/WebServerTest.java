@@ -1,6 +1,8 @@
 package org.vertx.mods.test.integration.java;
 
 import org.junit.Test;
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -19,9 +21,9 @@ public class WebServerTest extends TestVerticle {
   public void testWebServer() {
     JsonObject conf = new JsonObject();
     conf.putString("web_root", "src/test/resources").putString("host", "localhost").putNumber("port", 8181);
-    container.deployModule(System.getProperty("vertx.modulename"), conf, new Handler<String>() {
+    container.deployModule(System.getProperty("vertx.modulename"), conf, new AsyncResultHandler<String>() {
       @Override
-      public void handle(String deploymentID) {
+      public void handle(AsyncResult<String> deploymentID) {
         assertNotNull("deploymentID should not be null", deploymentID);
         HttpClient client = vertx.createHttpClient();
         client.setHost("localhost").setPort(8181);
