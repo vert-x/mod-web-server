@@ -16,110 +16,22 @@
 
 package org.vertx.mods;
 
-import org.vertx.java.busmods.BusModBase;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.AsyncResultHandler;
-import org.vertx.java.core.Future;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.HttpServer;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.sockjs.SockJSServer;
-
-import java.io.File;
+import org.vertx.java.core.http.RouteMatcher;
 
 /**
- * A simple web server module that can serve static files, and also can
- * bridge event bus messages to/from client side JavaScript and the server side
- * event bus.
- *
- * Please see the modules manual for full description of what configuration
- * parameters it takes.
+ * A simple web server module that implements a provides
+ * a default RouteMatcher that simply serves static files.
  *
  * @author <a href="http://tfox.org">Tim Fox</a>
+ * @author pidster
  */
-public class WebServer extends BusModBase implements Handler<HttpServerRequest> {
+public class WebServer extends WebServerBase {
 
-  private String webRootPrefix;
-  private String indexPage;
-  private boolean gzipFiles;
-
-  public void start(final Future<Void> result) {
-    start();
-
-    HttpServer server = vertx.createHttpServer();
-
-    if (getOptionalBooleanConfig("ssl", false)) {
-      server.setSSL(true).setKeyStorePassword(getOptionalStringConfig("key_store_password", "wibble"))
-                         .setKeyStorePath(getOptionalStringConfig("key_store_path", "server-keystore.jks"));
-    }
-
-    if (getOptionalBooleanConfig("static_files", true)) {
-      server.requestHandler(this);
-    }
-
-    boolean bridge = getOptionalBooleanConfig("bridge", false);
-    if (bridge) {
-      SockJSServer sjsServer = vertx.createSockJSServer(server);
-      JsonArray inboundPermitted = getOptionalArrayConfig("inbound_permitted", new JsonArray());
-      JsonArray outboundPermitted = getOptionalArrayConfig("outbound_permitted", new JsonArray());
-
-      sjsServer.bridge(getOptionalObjectConfig("sjs_config", new JsonObject().putString("prefix", "/eventbus")),
-                       inboundPermitted, outboundPermitted,
-                       getOptionalLongConfig("auth_timeout", 5 * 60 * 1000),
-                       getOptionalStringConfig("auth_address", "vertx.basicauthmanager.authorise"));
-    }
-
-    gzipFiles = getOptionalBooleanConfig("gzip_files", false);
-    String webRoot = getOptionalStringConfig("web_root", "web");
-    String index = getOptionalStringConfig("index_page", "index.html");
-    webRootPrefix = webRoot + File.separator;
-    indexPage = webRootPrefix + index;
-
-    server.listen(getOptionalIntConfig("port", 80), getOptionalStringConfig("host", "0.0.0.0"), new AsyncResultHandler<HttpServer>() {
-      @Override
-      public void handle(AsyncResult<HttpServer> ar) {
-        if (!ar.succeeded()) {
-          result.setFailure(ar.cause());
-        } else {
-          result.setResult(null);
-        }
-      }
-    });
+  @Override
+  protected RouteMatcher routeMatcher() {
+    RouteMatcher matcher = new RouteMatcher();
+    matcher.noMatch(staticHandler());
+    return matcher;
   }
 
-  public void handle(HttpServerRequest req) {
-    // browser gzip capability check
-    String acceptEncoding = req.headers().get("accept-encoding");
-    boolean acceptEncodingGzip = acceptEncoding == null ? false : acceptEncoding.contains("gzip");
-    String fileName = webRootPrefix + req.path();
-    try {
-      if (req.path().equals("/")) {
-        req.response().sendFile(indexPage);
-      } else if (!req.path().contains("..")) {
-        // try to send *.gz file
-        if (gzipFiles && acceptEncodingGzip) {
-          boolean exists = vertx.fileSystem().existsSync(fileName + ".gz");
-          if (exists) {
-            // found file with gz extension
-            req.response().putHeader("content-encoding", "gzip");
-            req.response().sendFile(fileName + ".gz");
-          } else {
-            // not found gz file, try to send uncompressed file
-            req.response().sendFile(fileName);
-          }
-        } else {
-          // send not gzip file
-          req.response().sendFile(fileName);
-        }
-      } else {
-        req.response().setStatusCode(404);
-        req.response().end();
-      }
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to check file");
-    }
-
-  }
 }
