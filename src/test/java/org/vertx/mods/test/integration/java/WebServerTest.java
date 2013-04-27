@@ -23,8 +23,38 @@ public class WebServerTest extends TestVerticle {
     conf.putString("web_root", "src/test/resources").putString("host", "localhost").putNumber("port", 8181);
     container.deployModule(System.getProperty("vertx.modulename"), conf, new AsyncResultHandler<String>() {
       @Override
-      public void handle(AsyncResult<String> deploymentID) {
-        assertNotNull("deploymentID should not be null", deploymentID);
+      public void handle(AsyncResult<String> ar) {
+        assertTrue(ar.succeeded());
+        HttpClient client = vertx.createHttpClient();
+        client.setHost("localhost").setPort(8181);
+        client.getNow("/", new Handler<HttpClientResponse>() {
+          @Override
+          public void handle(HttpClientResponse resp) {
+            resp.bodyHandler(new Handler<Buffer>() {
+              @Override
+              public void handle(Buffer body) {
+                assertTrue(body.toString().contains("Armadillos!"));
+                testComplete();
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+
+  @Test
+  public void testRouteMatcher() {
+    JsonObject conf = new JsonObject();
+    conf.putString("web_root", "src/test/resources")
+        .putBoolean("static_files", false)
+        .putBoolean("route_matcher", true)
+        .putString("host", "localhost")
+        .putNumber("port", 8181);
+    container.deployModule(System.getProperty("vertx.modulename"), conf, new AsyncResultHandler<String>() {
+      @Override
+      public void handle(AsyncResult<String> ar) {
+        assertTrue(ar.succeeded());
         HttpClient client = vertx.createHttpClient();
         client.setHost("localhost").setPort(8181);
         client.getNow("/", new Handler<HttpClientResponse>() {
