@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.vertx.mods;
+package org.vertx.mods.web;
 
 import org.vertx.java.core.http.RouteMatcher;
 

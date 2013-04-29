@@ -52,13 +52,23 @@ dependencies {
    */
 }
 
+task prepareTestModule(type: Copy) {
+  destinationDir = mkdir('build/mods')
+  from('src/test/resources') {
+    include 'io.vertx~webtest~1.0.0/*'
+  }
+  from(testClasses) {
+    into 'io.vertx~webtest~1.0.0'
+  }
+}
+
 test {
   /* Configure which tests are included
   include 'org/foo/**'
   exclude 'org/boo/**'
   */
-
 }
+test.dependsOn prepareTestModule
 
 /*
 If you're uploading stuff to Maven, Gradle needs to generate a POM.

@@ -1,4 +1,4 @@
-package org.vertx.mods.test.integration.java;
+package org.vertx.mods.web;
 
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
@@ -20,10 +20,15 @@ public class WebServerTest extends TestVerticle {
   @Test
   public void testWebServer() {
     JsonObject conf = new JsonObject();
-    conf.putString("web_root", "src/test/resources").putString("host", "localhost").putNumber("port", 8181);
+    conf.putString("web_root", "src/test/resources")
+        .putBoolean("static_files", true)
+        .putBoolean("route_matcher", false)
+        .putString("host", "localhost")
+        .putNumber("port", 8181);
     container.deployModule(System.getProperty("vertx.modulename"), conf, new AsyncResultHandler<String>() {
       @Override
       public void handle(AsyncResult<String> ar) {
+        if (ar.failed()) ar.cause().printStackTrace();
         assertTrue(ar.succeeded());
         HttpClient client = vertx.createHttpClient();
         client.setHost("localhost").setPort(8181);
@@ -54,12 +59,14 @@ public class WebServerTest extends TestVerticle {
     container.deployModule(System.getProperty("vertx.modulename"), conf, new AsyncResultHandler<String>() {
       @Override
       public void handle(AsyncResult<String> ar) {
+        if (ar.failed()) ar.cause().printStackTrace();
         assertTrue(ar.succeeded());
         HttpClient client = vertx.createHttpClient();
         client.setHost("localhost").setPort(8181);
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
+            
             resp.bodyHandler(new Handler<Buffer>() {
               @Override
               public void handle(Buffer body) {
@@ -72,6 +79,5 @@ public class WebServerTest extends TestVerticle {
       }
     });
   }
-
 
 }

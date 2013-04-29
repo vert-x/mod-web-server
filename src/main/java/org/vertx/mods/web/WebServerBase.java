@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.vertx.mods;
+package org.vertx.mods.web;
 
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.AsyncResult;
@@ -98,15 +98,23 @@ public abstract class WebServerBase extends BusModBase {
     });
   }
 
+  /**
+   * @return RouteMatcher
+   */
   protected abstract RouteMatcher routeMatcher();
 
+  /**
+   * @return Handler for serving static files
+   */
   protected Handler<HttpServerRequest> staticHandler() {
     String webRoot = getOptionalStringConfig("web_root", DEFAULT_WEB_ROOT);
     String index = getOptionalStringConfig("index_page", DEFAULT_INDEX_PAGE);
     String webRootPrefix = webRoot + File.separator;
     String indexPage = webRootPrefix + index;
     boolean gzipFiles = getOptionalBooleanConfig("gzip_files", false);
-    return new StaticFileHandler(webRootPrefix, indexPage, gzipFiles, vertx.fileSystem());
+    boolean caching = getOptionalBooleanConfig("caching", false);
+
+    return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching);
   }
 
 }

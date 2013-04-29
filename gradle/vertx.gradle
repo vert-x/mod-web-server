@@ -99,7 +99,7 @@ sourceSets {
 }
 
 task copyMod( type:Copy, dependsOn: 'classes', description: 'Assemble the module into the local mods directory' ) {
-  into "mods/$moduleName"
+  into "build/mods/$moduleName"
   from compileJava
   from 'src/main/resources'
   into( 'lib' ) {
@@ -129,6 +129,7 @@ clean {
 
 test {
   dependsOn copyMod
+  systemProperty 'vertx.mods', 'build/mods'
 
   // Make sure tests are always run!
   outputs.upToDateWhen { false }

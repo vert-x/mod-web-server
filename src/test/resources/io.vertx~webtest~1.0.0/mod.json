@@ -1,0 +1,4 @@
+{
+  "main": "io.vertx.test.TestWebServer",
+  "includes": "io.vertx~mod-web-server~2.0.0-SNAPSHOT"
+}
