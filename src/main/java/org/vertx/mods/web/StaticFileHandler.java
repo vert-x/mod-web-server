@@ -85,7 +85,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
         // TODO MD5 or something for etag?
         String etag = String.format("W/%d", lastModifiedTime);
 
-        if (req.headers().containsKey(Headers.IF_MATCH)) {
+        if (req.headers().contains(Headers.IF_MATCH)) {
           String checkEtags = req.headers().get(Headers.IF_MATCH);
           if (checkEtags.indexOf(',') > -1) {
             // there may be multiple etags
@@ -108,7 +108,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
         }
 
         // either if-none-match or if-modified-since header, then...
-        else if (req.headers().containsKey(Headers.IF_NONE_MATCH)) {
+        else if (req.headers().contains(Headers.IF_NONE_MATCH)) {
           String checkEtags = req.headers().get(Headers.IF_NONE_MATCH);
 
           // only HEAD or GET are allowed
@@ -136,7 +136,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
             sendError(req, 412);
           }
         }
-        else if (req.headers().containsKey(Headers.IF_MODIFIED_SINCE)) {
+        else if (req.headers().contains(Headers.IF_MODIFIED_SINCE)) {
           try {
             String ifModifiedSince = req.headers().get(Headers.IF_MODIFIED_SINCE);
             long ifModifiedSinceTime = parseDateHeader(ifModifiedSince);
@@ -149,7 +149,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
           }
         }
 
-        if (req.headers().containsKey(Headers.IF_UNMODIFIED_SINCE)) {
+        if (req.headers().contains(Headers.IF_UNMODIFIED_SINCE)) {
           try {
             String ifUnmodifiedSince = req.headers().get(Headers.IF_UNMODIFIED_SINCE);
             long ifUnmodifiedSinceTime = parseDateHeader(ifUnmodifiedSince);
@@ -201,7 +201,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     return date.getTime();
   }
 
-  private void setResponseHeader(HttpServerRequest req, String header, Object value) {
+  private void setResponseHeader(HttpServerRequest req, String header, String value) {
     req.response().putHeader(header, value);
   }
 

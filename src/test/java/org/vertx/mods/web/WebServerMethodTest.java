@@ -36,7 +36,7 @@ public class WebServerMethodTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().containsKey(Headers.CONTENT_LENGTH));
+            assertTrue(resp.headers().contains(Headers.CONTENT_LENGTH));
             resp.bodyHandler(new Handler<Buffer>() {
               @Override
               public void handle(Buffer body) {
@@ -68,7 +68,7 @@ public class WebServerMethodTest extends TestVerticle {
         HttpClientRequest request = client.head("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().containsKey(Headers.CONTENT_LENGTH));
+            assertTrue(resp.headers().contains(Headers.CONTENT_LENGTH));
             assertEquals("0", resp.headers().get(Headers.CONTENT_LENGTH));
             testComplete();
           }

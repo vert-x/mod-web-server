@@ -39,8 +39,8 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("etag"));
-            assertTrue(resp.headers().keySet().contains("last-modified"));
+            assertTrue(resp.headers().contains("etag"));
+            assertTrue(resp.headers().contains("last-modified"));
             testComplete();
           }
         });
@@ -66,7 +66,7 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("etag"));
+            assertTrue(resp.headers().contains("etag"));
             String etag = resp.headers().get("etag");
             HttpClientRequest request = client.get("/", new Handler<HttpClientResponse>() {
               @Override
@@ -101,7 +101,7 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("etag"));
+            assertTrue(resp.headers().contains("etag"));
             HttpClientRequest request = client.get("/", new Handler<HttpClientResponse>() {
               @Override
               public void handle(HttpClientResponse event) {
@@ -135,7 +135,7 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("etag"));
+            assertTrue(resp.headers().contains("etag"));
             String etag = resp.headers().get("etag");
             HttpClientRequest request = client.get("/", new Handler<HttpClientResponse>() {
               @Override
@@ -170,7 +170,7 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("etag"));
+            assertTrue(resp.headers().contains("etag"));
 
             HttpClientRequest request = client.get("/", new Handler<HttpClientResponse>() {
               @Override
@@ -205,7 +205,7 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("last-modified"));
+            assertTrue(resp.headers().contains("last-modified"));
 
             String lastModifiedStr = resp.headers().get("last-modified");
             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
@@ -248,7 +248,7 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("last-modified"));
+            assertTrue(resp.headers().contains("last-modified"));
 
             String lastModifiedStr = resp.headers().get("last-modified");
             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
@@ -291,7 +291,7 @@ public class WebServerHeadersTest extends TestVerticle {
         client.getNow("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertTrue(resp.headers().keySet().contains("last-modified"));
+            assertTrue(resp.headers().contains("last-modified"));
 
             String lastModifiedStr = resp.headers().get("last-modified");
             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
