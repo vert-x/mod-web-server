@@ -67,6 +67,14 @@ public abstract class WebServerBase extends BusModBase {
                          .setKeyStorePath(getOptionalStringConfig("key_store_path", "server-keystore.jks"));
     }
 
+    if (getOptionalBooleanConfig("route_matcher", false)) {
+      server.requestHandler(routeMatcher());
+    }
+    else if (getOptionalBooleanConfig("static_files", true)) {
+      server.requestHandler(staticHandler());
+    }
+
+    // Must always bridge AFTER setting request handlers
     boolean bridge = getOptionalBooleanConfig("bridge", false);
     if (bridge) {
       SockJSServer sjsServer = vertx.createSockJSServer(server);
@@ -74,16 +82,9 @@ public abstract class WebServerBase extends BusModBase {
       JsonArray outboundPermitted = getOptionalArrayConfig("outbound_permitted", new JsonArray());
 
       sjsServer.bridge(getOptionalObjectConfig("sjs_config", new JsonObject().putString("prefix", "/eventbus")),
-                       inboundPermitted, outboundPermitted,
-                       getOptionalLongConfig("auth_timeout", DEFAULT_AUTH_TIMEOUT),
-                       getOptionalStringConfig("auth_address", DEFAULT_AUTH_ADDRESS));
-    }
-
-    if (getOptionalBooleanConfig("route_matcher", false)) {
-      server.requestHandler(routeMatcher());
-    }
-    else if (getOptionalBooleanConfig("static_files", true)) {
-      server.requestHandler(staticHandler());
+          inboundPermitted, outboundPermitted,
+          getOptionalLongConfig("auth_timeout", DEFAULT_AUTH_TIMEOUT),
+          getOptionalStringConfig("auth_address", DEFAULT_AUTH_ADDRESS));
     }
 
     server.listen(getOptionalIntConfig("port", DEFAULT_PORT), getOptionalStringConfig("host", DEFAULT_ADDRESS), new AsyncResultHandler<HttpServer>() {
