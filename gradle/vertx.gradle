@@ -119,14 +119,6 @@ artifacts {
   archives modZip
 }
 
-task cleanModsDir(type: Delete) {
-  delete 'mods'
-}
-
-clean {
-  dependsOn cleanModsDir
-}
-
 test {
   dependsOn copyMod
   systemProperty 'vertx.mods', 'build/mods'
