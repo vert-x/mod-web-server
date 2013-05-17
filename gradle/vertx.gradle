@@ -116,7 +116,7 @@ task modZip( type: Zip, dependsOn: 'pullInDeps', description: 'Package the modul
 }
 
 artifacts {
-  archives modZip
+  modZip
 }
 
 test {
