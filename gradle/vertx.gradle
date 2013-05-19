@@ -98,6 +98,10 @@ sourceSets {
   }
 }
 
+javadoc {
+  classpath = configurations.compile + configurations.provided
+}
+
 task copyMod( type:Copy, dependsOn: 'classes', description: 'Assemble the module into the local mods directory' ) {
   into "build/mods/$moduleName"
   from compileJava
@@ -116,7 +120,7 @@ task modZip( type: Zip, dependsOn: 'pullInDeps', description: 'Package the modul
 }
 
 artifacts {
-  modZip
+  archives modZip
 }
 
 test {
