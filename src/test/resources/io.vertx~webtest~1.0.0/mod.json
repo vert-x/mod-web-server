@@ -1,4 +1,4 @@
 {
   "main": "io.vertx.test.TestWebServer",
-  "includes": "io.vertx~mod-web-server~2.0.0-beta1"
+  "includes": "io.vertx~mod-web-server~2.0.0-CR1"
 }
