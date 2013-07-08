@@ -16,10 +16,10 @@ The web-server configuration is as follows:
         "web_root": <web_root>,
         "index_page": <index_page>,
         "host": <host>,
-        "port": <port>
+        "port": <port>,
         "static_files": <static_files>,
         "route_matcher": <route_matcher>,
-        "gzip_files": <gzip_files>
+        "gzip_files": <gzip_files>,
 
         "ssl": <ssl>,
         "key_store_password": <key_store_password>,
