@@ -82,7 +82,7 @@ def configurePom(def pom) {
     name rootProject.name
     description 'Simple Web Server Module for Vert.x'
     inceptionYear '2012'
-    packaging produceJar == 'false' ? 'pom' : 'jar'
+    packaging 'jar'
     url 'https://github.com/vert-x/mod-web-server'
 
     developers {
