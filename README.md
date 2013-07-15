@@ -15,10 +15,11 @@ The web-server configuration is as follows:
     {
         "web_root": <web_root>,
         "index_page": <index_page>,
-        "host", <host>,
-        "port", <port>
+        "host": <host>,
+        "port": <port>,
         "static_files": <static_files>,
-        "gzip_files": <gzip_files>
+        "route_matcher": <route_matcher>,
+        "gzip_files": <gzip_files>,
 
         "ssl": <ssl>,
         "key_store_password": <key_store_password>,
@@ -37,6 +38,7 @@ The web-server configuration is as follows:
 * `host`. The host or ip address to listen at for connections. `0.0.0.0` means listen at all available addresses. Default is `0.0.0.0`.
 * `port`. The port to listen at for connections. Default is `80`.
 * `static_files`. Should the server serve static files? Default is `true`.
+* `route_matcher`. Should the server execute your defined RouteMatcher? Default is `false`.
 * `gzip_files`. Should the server serve pre-compressed files? `true`: check file "fileName.gz", and send it back, if not found, then fallback to "fileName". `false`: send back "fileName", do not check "fileName.gz" unnecessarily. Default is `false`.
 * `ssl`. Should the server use `https` as a protocol? Default is `false`.
 * `key_store_password`. Password of Java keystore which holds the server certificate. Only used if `ssl` is `true`. Default is `wibble`.
