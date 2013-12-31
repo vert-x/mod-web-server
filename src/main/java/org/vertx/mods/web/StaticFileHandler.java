@@ -72,12 +72,19 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     try {
       // index file may also be zipped
       String fileName = (req.path().equals("/") ? indexPage : webRootPrefix + req.path());
+
       boolean zipped = (gzipFiles && acceptEncodingGzip);
       if (zipped && fileSystem.existsSync(fileName + ".gz")) {
         fileName += ".gz";
       }
 
       int error = 200;
+      
+      // Ensure no /../ in the path to avoid sending everything in the file system
+      if (fileName.indexOf(".." != -1) {
+        error = 402;
+      }
+
       if (caching) {
 
         long lastModifiedTime = checkCacheOrFileSystem(fileName);
