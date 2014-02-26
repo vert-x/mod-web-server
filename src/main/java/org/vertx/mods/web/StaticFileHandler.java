@@ -20,6 +20,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ConcurrentMap;
+import java.nio.file.Paths;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
@@ -41,20 +42,22 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
   private String indexPage;
   private boolean gzipFiles;
   private boolean caching;
+  private boolean redirect404ToIndex;
 
   private ConcurrentMap<String, Long> filePropsModified;
 
   private SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
   
   public StaticFileHandler(Vertx vertx, String webRootPrefix) {
-    this(vertx, webRootPrefix, "index.html", false, true);
+    this(vertx, webRootPrefix, "index.html", false, true, false);
   }
 
   public StaticFileHandler(Vertx vertx, String webRootPrefix, boolean gzipFiles, boolean caching) {
-    this(vertx, webRootPrefix, "index.html", gzipFiles, caching);
+    this(vertx, webRootPrefix, "index.html", gzipFiles, caching, false);
   }
 
-  public StaticFileHandler(Vertx vertx, String webRootPrefix, String indexPage, boolean gzipFiles, boolean caching) {
+  public StaticFileHandler(Vertx vertx, String webRootPrefix, String indexPage, 
+                           boolean gzipFiles, boolean caching, boolean redirect404ToIndex) {
     super();
     this.filePropsModified = vertx.sharedData().getMap("webserver.fileProps.modified");
     this.fileSystem = vertx.fileSystem();
@@ -62,6 +65,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     this.indexPage = indexPage;
     this.gzipFiles = gzipFiles;
     this.caching = caching;
+    this.redirect404ToIndex = redirect404ToIndex;
   }
 
   public void handle(HttpServerRequest req) {
@@ -70,104 +74,109 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     boolean acceptEncodingGzip = acceptEncoding == null ? false : acceptEncoding.contains("gzip");
 
     try {
-      // index file may also be zipped
-      String fileName = (req.path().equals("/") ? indexPage : webRootPrefix + req.path());
-      boolean zipped = (gzipFiles && acceptEncodingGzip);
-      if (zipped && fileSystem.existsSync(fileName + ".gz")) {
-        fileName += ".gz";
-      }
-
+      String fileName = "";
       int error = 200;
-      if (caching) {
+      boolean zipped = (gzipFiles && acceptEncodingGzip);
 
-        long lastModifiedTime = checkCacheOrFileSystem(fileName);
+      // Ensure no /../ in the path to avoid sending everything in the file system
+      if (req.path().indexOf("..") != -1) {
+        error = 402;
+      }
+      else {
+        fileName = getAbsoluteFilename(req.path(), zipped);
 
-        // TODO MD5 or something for etag?
-        String etag = String.format("W/%d", lastModifiedTime);
+        if (caching) {
+          long lastModifiedTime = checkCacheOrFileSystem(fileName);
 
-        if (req.headers().contains(Headers.IF_MATCH)) {
-          String checkEtags = req.headers().get(Headers.IF_MATCH);
-          if (checkEtags.indexOf(',') > -1) {
-            // there may be multiple etags
-            boolean matched = false;
-            LOOP : for (String checkEtag : checkEtags.split(", *")) {
-              if (etag.equals(checkEtag)) {
-                matched = true;
-                break LOOP;
-              }
-            }
-            if (!matched) error = 412;
-          }
-          // wildcards are allowed
-          else if ("*".equals(checkEtags) && !fileSystem.existsSync(fileName)) {
-            error = 412;
-          }
-          else if (etag.equals(checkEtags)) {
-            error = 304;
-          }
-        }
-
-        // either if-none-match or if-modified-since header, then...
-        else if (req.headers().contains(Headers.IF_NONE_MATCH)) {
-          String checkEtags = req.headers().get(Headers.IF_NONE_MATCH);
-
-          // only HEAD or GET are allowed
-          if ("HEAD".equals(req.method()) || "GET".equals(req.method())) {
+          // TODO MD5 or something for etag?
+          String etag = String.format("W/%d", lastModifiedTime);
+          
+          if (req.headers().contains(Headers.IF_MATCH)) {
+            String checkEtags = req.headers().get(Headers.IF_MATCH);
             if (checkEtags.indexOf(',') > -1) {
               // there may be multiple etags
+              boolean matched = false;
               LOOP : for (String checkEtag : checkEtags.split(", *")) {
-                System.out.println(etag + " == " + checkEtag);
-
                 if (etag.equals(checkEtag)) {
-                  error = 304;
+                  matched = true;
                   break LOOP;
                 }
               }
+              if (!matched) error = 412;
             }
             // wildcards are allowed
-            else if ("*".equals(checkEtags)) {
-              error = 304;
+            else if ("*".equals(checkEtags) && !fileSystem.existsSync(fileName)) {
+              error = 412;
             }
             else if (etag.equals(checkEtags)) {
               error = 304;
             }
           }
-          else {
-            sendError(req, 412);
-          }
-        }
-        else if (req.headers().contains(Headers.IF_MODIFIED_SINCE)) {
-          try {
-            String ifModifiedSince = req.headers().get(Headers.IF_MODIFIED_SINCE);
-            long ifModifiedSinceTime = parseDateHeader(ifModifiedSince);
-            if (lastModifiedTime == ifModifiedSinceTime) {
-              error = 304;
+
+          // either if-none-match or if-modified-since header, then...
+          else if (req.headers().contains(Headers.IF_NONE_MATCH)) {
+            String checkEtags = req.headers().get(Headers.IF_NONE_MATCH);
+
+            // only HEAD or GET are allowed
+            if ("HEAD".equals(req.method()) || "GET".equals(req.method())) {
+              if (checkEtags.indexOf(',') > -1) {
+                // there may be multiple etags
+                LOOP : for (String checkEtag : checkEtags.split(", *")) {
+                  System.out.println(etag + " == " + checkEtag);
+
+                  if (etag.equals(checkEtag)) {
+                    error = 304;
+                    break LOOP;
+                  }
+                }
+              }
+              // wildcards are allowed
+              else if ("*".equals(checkEtags)) {
+                error = 304;
+              }
+              else if (etag.equals(checkEtags)) {
+                error = 304;
+              }
+            }
+            else {
+              sendError(req, 412);
             }
           }
-          catch (ParseException e) {
-            // if date header is invalid, ignore
-          }
-        }
+          else if (req.headers().contains(Headers.IF_MODIFIED_SINCE)) {
+            try {
+              String ifModifiedSince = req.headers().get(Headers.IF_MODIFIED_SINCE);
+              long ifModifiedSinceTime = parseDateHeader(ifModifiedSince);
 
-        if (req.headers().contains(Headers.IF_UNMODIFIED_SINCE)) {
-          try {
-            String ifUnmodifiedSince = req.headers().get(Headers.IF_UNMODIFIED_SINCE);
-            long ifUnmodifiedSinceTime = parseDateHeader(ifUnmodifiedSince);
-
-            if (lastModifiedTime > ifUnmodifiedSinceTime) {
-              error = 412;
+              if (lastModifiedTime == ifModifiedSinceTime) {
+                error = 304;
+              }
+            }
+            catch (ParseException e) {
+              // if date header is invalid, ignore
             }
           }
-          catch (ParseException e) {
-            // if date header is invalid, ignore
+
+          if (req.headers().contains(Headers.IF_UNMODIFIED_SINCE)) {
+            try {
+              String ifUnmodifiedSince = req.headers().get(Headers.IF_UNMODIFIED_SINCE);
+              long ifUnmodifiedSinceTime = parseDateHeader(ifUnmodifiedSince);
+
+              if (lastModifiedTime > ifUnmodifiedSinceTime) {
+                error = 412;
+              }
+            }
+            catch (ParseException e) {
+              // if date header is invalid, ignore
+            }
           }
+
+          setResponseHeader(req, Headers.ETAG, etag);
+          setResponseHeader(req, Headers.LAST_MODIFIED, format.format(new Date(lastModifiedTime)));
         }
 
-        setResponseHeader(req, Headers.ETAG, etag);
-        setResponseHeader(req, Headers.LAST_MODIFIED, format.format(new Date(lastModifiedTime)));
+        if (zipped) setResponseHeader(req, Headers.CONTENT_ENCODING, "gzip");
       }
 
-      if (zipped) setResponseHeader(req, Headers.CONTENT_ENCODING, "gzip");
       if (error != 200) {
         sendError(req, error);
       }
@@ -185,6 +194,20 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     }
   }
 
+  private String getAbsoluteFilename(String relativePath, boolean zipped) {
+    String result = (relativePath.equals("/") ? indexPage : Paths.get(webRootPrefix, relativePath).toString());
+
+    // index file may also be zipped
+    if (zipped && fileSystem.existsSync(result + ".gz")) {
+      result += ".gz";
+    }
+    else if ((redirect404ToIndex) && (relativePath != "/")) {
+      if( !fileSystem.existsSync(result))
+        return getAbsoluteFilename("/", zipped);
+    }
+    return result;
+  }
+
   private long checkCacheOrFileSystem(String fileName) {
 
     if (filePropsModified.containsKey(fileName)) {
@@ -192,8 +215,12 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     }
 
     FileProps fileProps = fileSystem.propsSync(fileName);
-    filePropsModified.put(fileName, fileProps.lastModifiedTime().getTime());
-    return fileProps.lastModifiedTime().getTime();
+
+    // HTTP headers are only accurate to nearest second
+    long seconds = (fileProps.lastModifiedTime().getTime() / 1000) * 1000; 
+
+    filePropsModified.put(fileName, seconds);
+    return seconds;
   }
 
   private long parseDateHeader(String dateStr) throws ParseException {

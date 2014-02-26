@@ -114,8 +114,9 @@ public abstract class WebServerBase extends BusModBase {
     String indexPage = webRootPrefix + index;
     boolean gzipFiles = getOptionalBooleanConfig("gzip_files", false);
     boolean caching = getOptionalBooleanConfig("caching", false);
+    boolean redirect404ToIndex = getOptionalBooleanConfig("redirect_404_to_index", false);
 
-    return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching);
+    return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching, redirect404ToIndex);
   }
 
 }
