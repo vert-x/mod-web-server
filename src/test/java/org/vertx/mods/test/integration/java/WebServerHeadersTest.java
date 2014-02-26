@@ -249,7 +249,7 @@ public class WebServerHeadersTest extends TestVerticle {
           @Override
           public void handle(HttpClientResponse resp) {
             assertTrue(resp.headers().contains("last-modified"));
-            
+
             String lastModifiedStr = resp.headers().get("last-modified");
             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
             try {
