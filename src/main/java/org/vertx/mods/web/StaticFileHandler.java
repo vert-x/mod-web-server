@@ -203,7 +203,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     }
     else if ((redirect404ToIndex) && (relativePath != "/")) {
       if( !fileSystem.existsSync(result))
-        return getAbsoluteFilename("/", zipped);
+        result = getAbsoluteFilename("/", zipped);
     }
     return result;
   }
