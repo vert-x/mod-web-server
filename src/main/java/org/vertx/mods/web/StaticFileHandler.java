@@ -80,7 +80,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
 
       // Ensure no /../ in the path to avoid sending everything in the file system
       if (req.path().indexOf("..") != -1) {
-        error = 402;
+        error = 403;
       }
       else {
         fileName = getAbsoluteFilename(req.path(), zipped);
