@@ -97,7 +97,7 @@ public class WebServerTest extends TestVerticle {
         client.getNow("/../../test/resources/index.html", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
-            assertEquals(402, resp.statusCode());
+            assertEquals(403, resp.statusCode());
 
             resp.bodyHandler(new Handler<Buffer>() {
               @Override
