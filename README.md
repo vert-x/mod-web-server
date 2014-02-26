@@ -20,6 +20,7 @@ The web-server configuration is as follows:
         "static_files": <static_files>,
         "route_matcher": <route_matcher>,
         "gzip_files": <gzip_files>,
+        "redirect_404_to_index": <redirect_404_to_index>,
 
         "ssl": <ssl>,
         "key_store_password": <key_store_password>,
@@ -40,6 +41,7 @@ The web-server configuration is as follows:
 * `static_files`. Should the server serve static files? Default is `true`.
 * `route_matcher`. Should the server execute your defined RouteMatcher? Default is `false`.
 * `gzip_files`. Should the server serve pre-compressed files? `true`: check file "fileName.gz", and send it back, if not found, then fallback to "fileName". `false`: send back "fileName", do not check "fileName.gz" unnecessarily. Default is `false`.
+* `redirect_404_to_index`. When serving static files if the file is not found the server will return the index_page (needed for angularjs). Default is `false`.
 * `ssl`. Should the server use `https` as a protocol? Default is `false`.
 * `key_store_password`. Password of Java keystore which holds the server certificate. Only used if `ssl` is `true`. Default is `wibble`.
 * `key_store_path`. Path to keystore which holds the server certificate. Default is `server-keystore.jks`. Only used if `ssl` is `true`. *Don't put the keystore under your webroot!*.
