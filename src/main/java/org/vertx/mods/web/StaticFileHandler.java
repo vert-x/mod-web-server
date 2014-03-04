@@ -78,7 +78,11 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
       }
 
       int error = 200;
-      if (caching) {
+
+      if (fileName.contains("..")) {
+        // Prevent accessing files outside webroot
+        error = 403;
+      } else if (caching) {
 
         long lastModifiedTime = checkCacheOrFileSystem(fileName);
 
