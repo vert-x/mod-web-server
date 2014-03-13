@@ -60,6 +60,9 @@ public abstract class WebServerBase extends BusModBase {
   public void start(final Future<Void> result) {
     start();
 
+    deploySPA();
+    deployServices();
+
     HttpServer server = vertx.createHttpServer();
 
     if (getOptionalBooleanConfig("ssl", false)) {
@@ -99,6 +102,20 @@ public abstract class WebServerBase extends BusModBase {
     });
   }
 
+  protected void deploySPA() {
+    JSONArray moduleList = getOptionalArrayConfig("spa_modules", JsonArray);
+    for (JSONObject module : moduleList) {
+      this.deployModule(module.getString("name"), module.getObject("config"));
+    }
+  }
+  
+  protected void deployServices() {
+    JSONArray module = getOptionalArrayConfig("service_modules", JsonArray);
+    for (JSONObject module : moduleList) {
+      this.deployModule(module.getString("name"), module.getObject("config"));
+    } 
+  }
+
   /**
    * @return RouteMatcher
    */
@@ -115,8 +132,20 @@ public abstract class WebServerBase extends BusModBase {
     boolean gzipFiles = getOptionalBooleanConfig("gzip_files", false);
     boolean caching = getOptionalBooleanConfig("caching", false);
     boolean redirect404ToIndex = getOptionalBooleanConfig("redirect_404_to_index", false);
+    
+    Map<String,String> moduleList = getModuleList();
 
-    return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching, redirect404ToIndex);
+    return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching, redirect404ToIndex, moduleList);
   }
 
+  protected Map<String,String> getModuleList() {
+    Map<String,String> result = new HashMap<String,String>();
+    JSONArray moduleList = getOptionalArrayConfig("spa_modules", JsonArray);
+    
+    for (JSONObject module : moduleList) {
+      result.put(module.getString("directory"), module.getString("name"));
+    }
+
+    return result;
+  }
 }

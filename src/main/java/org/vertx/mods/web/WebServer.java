@@ -33,5 +33,4 @@ public class WebServer extends WebServerBase {
     matcher.noMatch(staticHandler());
     return matcher;
   }
-
 }

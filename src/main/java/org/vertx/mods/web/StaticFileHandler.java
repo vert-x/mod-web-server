@@ -43,21 +43,23 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
   private boolean gzipFiles;
   private boolean caching;
   private boolean redirect404ToIndex;
+  private Map<String,String> moduleList;
 
   private ConcurrentMap<String, Long> filePropsModified;
 
   private SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
   
   public StaticFileHandler(Vertx vertx, String webRootPrefix) {
-    this(vertx, webRootPrefix, "index.html", false, true, false);
+    this(vertx, webRootPrefix, "index.html", false, true, false, null);
   }
 
   public StaticFileHandler(Vertx vertx, String webRootPrefix, boolean gzipFiles, boolean caching) {
-    this(vertx, webRootPrefix, "index.html", gzipFiles, caching, false);
+    this(vertx, webRootPrefix, "index.html", gzipFiles, caching, false, null);
   }
 
   public StaticFileHandler(Vertx vertx, String webRootPrefix, String indexPage, 
-                           boolean gzipFiles, boolean caching, boolean redirect404ToIndex) {
+                           boolean gzipFiles, boolean caching, boolean redirect404ToIndex,
+                           Map<String,String> moduleList) {
     super();
     this.filePropsModified = vertx.sharedData().getMap("webserver.fileProps.modified");
     this.fileSystem = vertx.fileSystem();
@@ -66,6 +68,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     this.gzipFiles = gzipFiles;
     this.caching = caching;
     this.redirect404ToIndex = redirect404ToIndex;
+    this.moduleList = moduleList;
   }
 
   public void handle(HttpServerRequest req) {
@@ -197,6 +200,8 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
   private String getAbsoluteFilename(String relativePath, boolean zipped) {
     String result = (relativePath.equals("/") ? indexPage : Paths.get(webRootPrefix, relativePath).toString());
 
+    result = resolveModulePath(result);
+
     // index file may also be zipped
     if (zipped && fileSystem.existsSync(result + ".gz")) {
       result += ".gz";
@@ -206,6 +211,17 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
         result = getAbsoluteFilename("/", zipped);
     }
     return result;
+  }
+
+  private String resolveModulePath(String originalPath)
+  {
+    if (moduleList != null) {
+      foreach(directory in moduleList.keySet()) {
+        if (originalPath.indexOf(directory) == 0)
+          return Paths.get("mods", moduleList[directory], relativePath.substring(directory.length)).toString();  
+      }
+    }      
+    return originalPath;
   }
 
   private long checkCacheOrFileSystem(String fileName) {
@@ -241,5 +257,4 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     req.response().setStatusCode(error);
     req.response().end();
   }
-
 }
