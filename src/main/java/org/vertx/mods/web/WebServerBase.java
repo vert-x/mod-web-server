@@ -29,6 +29,8 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.sockjs.SockJSServer;
 
 import java.io.File;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * A simple web server base module that can serve static files, provides an
@@ -60,7 +62,7 @@ public abstract class WebServerBase extends BusModBase {
   public void start(final Future<Void> result) {
     start();
 
-    deploySPA();
+    //deployStaticModules();
     deployServices();
 
     HttpServer server = vertx.createHttpServer();
@@ -102,18 +104,20 @@ public abstract class WebServerBase extends BusModBase {
     });
   }
 
-  protected void deploySPA() {
-    JSONArray moduleList = getOptionalArrayConfig("spa_modules", JsonArray);
-    for (JSONObject module : moduleList) {
-      this.deployModule(module.getString("name"), module.getObject("config"));
-    }
-  }
+//  protected void deployStaticModules() {
+//    JsonArray moduleList = getOptionalArrayConfig("static_modules", new JsonArray());
+//    for (Object module : moduleList) {
+//      JsonObject jsonModule = (JsonObject) module;
+//      this.container.deployModule(jsonModule.getString("name"), jsonModule.getObject("config"));
+//    }
+//  }
   
   protected void deployServices() {
-    JSONArray module = getOptionalArrayConfig("service_modules", JsonArray);
-    for (JSONObject module : moduleList) {
-      this.deployModule(module.getString("name"), module.getObject("config"));
-    } 
+    JsonArray moduleList = getOptionalArrayConfig("service_modules", new JsonArray());
+    for (Object module : moduleList) {
+      JsonObject jsonModule = (JsonObject) module;
+      this.container.deployModule(jsonModule.getString("name"), jsonModule.getObject("config"));
+    }
   }
 
   /**
@@ -126,24 +130,24 @@ public abstract class WebServerBase extends BusModBase {
    */
   protected Handler<HttpServerRequest> staticHandler() {
     String webRoot = getOptionalStringConfig("web_root", DEFAULT_WEB_ROOT);
-    String index = getOptionalStringConfig("index_page", DEFAULT_INDEX_PAGE);
+    String indexPage = getOptionalStringConfig("index_page", DEFAULT_INDEX_PAGE);
     String webRootPrefix = webRoot + File.separator;
-    String indexPage = webRootPrefix + index;
     boolean gzipFiles = getOptionalBooleanConfig("gzip_files", false);
     boolean caching = getOptionalBooleanConfig("caching", false);
     boolean redirect404ToIndex = getOptionalBooleanConfig("redirect_404_to_index", false);
     
-    Map<String,String> moduleList = getModuleList();
+    Map<String,String> moduleList = getStaticModuleList();
 
     return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching, redirect404ToIndex, moduleList);
   }
 
-  protected Map<String,String> getModuleList() {
+  protected Map<String,String> getStaticModuleList() {
     Map<String,String> result = new HashMap<String,String>();
-    JSONArray moduleList = getOptionalArrayConfig("spa_modules", JsonArray);
+    JsonArray moduleList = getOptionalArrayConfig("static_modules", new JsonArray());
     
-    for (JSONObject module : moduleList) {
-      result.put(module.getString("directory"), module.getString("name"));
+    for (Object module : moduleList) {
+      JsonObject jsonModule = (JsonObject) module;
+      result.put(jsonModule.getString("mountAt"), jsonModule.getString("name"));
     }
 
     return result;

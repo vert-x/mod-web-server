@@ -19,6 +19,7 @@ package org.vertx.mods.web;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.nio.file.Paths;
 
@@ -198,15 +199,18 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
   }
 
   private String getAbsoluteFilename(String relativePath, boolean zipped) {
-    String result = (relativePath.equals("/") ? indexPage : Paths.get(webRootPrefix, relativePath).toString());
-
+    String result = (relativePath.equals("/") ? indexPage : relativePath);
+	 
     result = resolveModulePath(result);
 
+    if( result.equals(relativePath))
+    	result = Paths.get(webRootPrefix, relativePath).toString();
+    
     // index file may also be zipped
     if (zipped && fileSystem.existsSync(result + ".gz")) {
       result += ".gz";
     }
-    else if ((redirect404ToIndex) && (relativePath != "/")) {
+    else if ((redirect404ToIndex) && (!relativePath.equals("/"))) {
       if( !fileSystem.existsSync(result))
         result = getAbsoluteFilename("/", zipped);
     }
@@ -216,9 +220,9 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
   private String resolveModulePath(String originalPath)
   {
     if (moduleList != null) {
-      foreach(directory in moduleList.keySet()) {
-        if (originalPath.indexOf(directory) == 0)
-          return Paths.get("mods", moduleList[directory], relativePath.substring(directory.length)).toString();  
+      for(String directory : moduleList.keySet()) {
+         if( Paths.get(originalPath).startsWith(Paths.get(directory)))
+          return Paths.get("mods", moduleList.get(directory), originalPath.substring(directory.length())).toString();
       }
     }      
     return originalPath;
