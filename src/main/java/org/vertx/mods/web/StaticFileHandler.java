@@ -19,6 +19,8 @@ package org.vertx.mods.web;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.vertx.java.core.Handler;
@@ -26,6 +28,8 @@ import org.vertx.java.core.Vertx;
 import org.vertx.java.core.file.FileProps;
 import org.vertx.java.core.file.FileSystem;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.json.JsonObject;
+import org.vertx.mods.web.mapping.UrlMapper;
 
 /**
  * A Handler implementation specifically for serving HTTP requests
@@ -38,30 +42,23 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
 
   private FileSystem fileSystem;
   private String webRootPrefix;
-  private String indexPage;
   private boolean gzipFiles;
   private boolean caching;
+  private UrlMapper urlMapper;
 
   private ConcurrentMap<String, Long> filePropsModified;
 
   private SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-  
-  public StaticFileHandler(Vertx vertx, String webRootPrefix) {
-    this(vertx, webRootPrefix, "index.html", false, true);
-  }
 
-  public StaticFileHandler(Vertx vertx, String webRootPrefix, boolean gzipFiles, boolean caching) {
-    this(vertx, webRootPrefix, "index.html", gzipFiles, caching);
-  }
-
-  public StaticFileHandler(Vertx vertx, String webRootPrefix, String indexPage, boolean gzipFiles, boolean caching) {
+  public StaticFileHandler(Vertx vertx, String webRootPrefix, String indexPage, boolean gzipFiles, boolean caching, JsonObject urlMappings) {
     super();
     this.filePropsModified = vertx.sharedData().getMap("webserver.fileProps.modified");
     this.fileSystem = vertx.fileSystem();
     this.webRootPrefix = webRootPrefix;
-    this.indexPage = indexPage;
     this.gzipFiles = gzipFiles;
     this.caching = caching;
+    urlMappings.putString("/", indexPage);
+    this.urlMapper = new UrlMapper(urlMappings, webRootPrefix);
   }
 
   public void handle(HttpServerRequest req) {
@@ -71,7 +68,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
 
     try {
       // index file may also be zipped
-      String fileName = (req.path().equals("/") ? indexPage : webRootPrefix + req.path());
+      String fileName = urlMapper.getFilePath(req.path());
       boolean zipped = (gzipFiles && acceptEncodingGzip);
       if (zipped && fileSystem.existsSync(fileName + ".gz")) {
         fileName += ".gz";
@@ -144,7 +141,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
           try {
             String ifModifiedSince = req.headers().get(Headers.IF_MODIFIED_SINCE);
             long ifModifiedSinceTime = parseDateHeader(ifModifiedSince);
-            if (lastModifiedTime == ifModifiedSinceTime) {
+            if (lastModifiedTime < ifModifiedSinceTime) {
               error = 304;
             }
           }
@@ -158,7 +155,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
             String ifUnmodifiedSince = req.headers().get(Headers.IF_UNMODIFIED_SINCE);
             long ifUnmodifiedSinceTime = parseDateHeader(ifUnmodifiedSince);
 
-            if (lastModifiedTime > ifUnmodifiedSinceTime) {
+            if (lastModifiedTime >= ifUnmodifiedSinceTime) {
               error = 412;
             }
           }
