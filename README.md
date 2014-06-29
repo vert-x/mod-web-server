@@ -61,7 +61,7 @@ This serves files from the web directory
 
     {
         "host": mycompany.com
-    {
+    }
 
 ### Simple https server
 
