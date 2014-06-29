@@ -109,13 +109,13 @@ public abstract class WebServerBase extends BusModBase {
    */
   protected Handler<HttpServerRequest> staticHandler() {
     String webRoot = getOptionalStringConfig("web_root", DEFAULT_WEB_ROOT);
-    String index = getOptionalStringConfig("index_page", DEFAULT_INDEX_PAGE);
+    String indexPage = getOptionalStringConfig("index_page", DEFAULT_INDEX_PAGE);
     String webRootPrefix = webRoot + File.separator;
-    String indexPage = webRootPrefix + index;
+    JsonObject urlMappings = getOptionalObjectConfig("urlMappings", new JsonObject());
     boolean gzipFiles = getOptionalBooleanConfig("gzip_files", false);
     boolean caching = getOptionalBooleanConfig("caching", false);
 
-    return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching);
+    return new StaticFileHandler(vertx, webRootPrefix, indexPage, gzipFiles, caching, urlMappings);
   }
 
 }

@@ -26,6 +26,7 @@ public class WebServerMethodTest extends TestVerticle {
         .putBoolean("static_files", true)
         .putBoolean("route_matcher", false)
         .putString("host", "localhost")
+        .putObject("urlMappings", new JsonObject().putString("/.*", "index.html"))
         .putNumber("port", 8181);
     container.deployModule(System.getProperty("vertx.modulename"), conf, new AsyncResultHandler<String>() {
       @Override
@@ -34,7 +35,7 @@ public class WebServerMethodTest extends TestVerticle {
         assertTrue(ar.succeeded());
         HttpClient client = vertx.createHttpClient();
         client.setHost("localhost").setPort(8181);
-        client.getNow("/", new Handler<HttpClientResponse>() {
+        client.getNow("/Armadillos", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
             assertTrue(resp.headers().contains(Headers.CONTENT_LENGTH));
