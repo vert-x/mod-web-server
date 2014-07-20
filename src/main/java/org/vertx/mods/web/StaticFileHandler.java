@@ -18,6 +18,7 @@ package org.vertx.mods.web;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,10 +82,10 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
         error = 403;
       } else if (caching) {
 
-        long lastModifiedTime = checkCacheOrFileSystem(fileName);
+        Date lastModifiedTime = checkCacheOrFileSystem(fileName);
 
         // TODO MD5 or something for etag?
-        String etag = String.format("W/%d", lastModifiedTime);
+        String etag = String.format("W/%d", lastModifiedTime.getTime());
 
         if (req.headers().contains(Headers.IF_MATCH)) {
           String checkEtags = req.headers().get(Headers.IF_MATCH);
@@ -140,8 +141,8 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
         else if (req.headers().contains(Headers.IF_MODIFIED_SINCE)) {
           try {
             String ifModifiedSince = req.headers().get(Headers.IF_MODIFIED_SINCE);
-            long ifModifiedSinceTime = parseDateHeader(ifModifiedSince);
-            if (lastModifiedTime < ifModifiedSinceTime) {
+            Date ifModifiedSinceTime = parseDateHeader(ifModifiedSince);
+            if (lastModifiedTime.compareTo(ifModifiedSinceTime) >= 0) {
               error = 304;
             }
           }
@@ -153,9 +154,9 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
         if (req.headers().contains(Headers.IF_UNMODIFIED_SINCE)) {
           try {
             String ifUnmodifiedSince = req.headers().get(Headers.IF_UNMODIFIED_SINCE);
-            long ifUnmodifiedSinceTime = parseDateHeader(ifUnmodifiedSince);
+            Date ifUnmodifiedSinceTime = parseDateHeader(ifUnmodifiedSince);
 
-            if (lastModifiedTime >= ifUnmodifiedSinceTime) {
+            if (lastModifiedTime.after(ifUnmodifiedSinceTime)) {
               error = 412;
             }
           }
@@ -165,7 +166,7 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
         }
 
         setResponseHeader(req, Headers.ETAG, etag);
-        setResponseHeader(req, Headers.LAST_MODIFIED, format.format(new Date(lastModifiedTime)));
+        setResponseHeader(req, Headers.LAST_MODIFIED, format.format(lastModifiedTime));
       }
 
       if (zipped) setResponseHeader(req, Headers.CONTENT_ENCODING, "gzip");
@@ -186,20 +187,22 @@ public class StaticFileHandler implements Handler<HttpServerRequest> {
     }
   }
 
-  private long checkCacheOrFileSystem(String fileName) {
+  private Date checkCacheOrFileSystem(String fileName) {
 
     if (filePropsModified.containsKey(fileName)) {
-      return filePropsModified.get(fileName);
+      return new Date(filePropsModified.get(fileName));
     }
 
     FileProps fileProps = fileSystem.propsSync(fileName);
-    filePropsModified.put(fileName, fileProps.lastModifiedTime().getTime());
-    return fileProps.lastModifiedTime().getTime();
+    Calendar lastModifiedTime = Calendar.getInstance();
+    lastModifiedTime.setTime(fileProps.lastModifiedTime());
+    lastModifiedTime.set(Calendar.MILLISECOND, 0);
+    filePropsModified.put(fileName, lastModifiedTime.getTime().getTime());
+    return lastModifiedTime.getTime();
   }
 
-  private long parseDateHeader(String dateStr) throws ParseException {
-    Date date = format.parse(dateStr);
-    return date.getTime();
+  private Date parseDateHeader(String dateStr) throws ParseException {
+    return format.parse(dateStr);
   }
 
   private void setResponseHeader(HttpServerRequest req, String header, String value) {
