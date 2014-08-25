@@ -65,6 +65,10 @@ public abstract class WebServerBase extends BusModBase {
     if (getOptionalBooleanConfig("ssl", false)) {
       server.setSSL(true).setKeyStorePassword(getOptionalStringConfig("key_store_password", "wibble"))
                          .setKeyStorePath(getOptionalStringConfig("key_store_path", "server-keystore.jks"));
+        if (getOptionalBooleanConfig("client_auth_required", false)) {
+        server.setClientAuthRequired(true).setTrustStorePassword(getOptionalStringConfig("trust_store_password", "wibble"))
+                                          .setTrustStorePath(getOptionalStringConfig("trust_store_path", "server-truststore.jks"));
+        }
     }
 
     if (getOptionalBooleanConfig("route_matcher", false)) {
