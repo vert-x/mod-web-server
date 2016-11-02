@@ -1,14 +1,16 @@
-# Web Server
+# Vert.x 2.x is **deprecated** - use instead http://vertx.io/docs/vertx-web/java/#_serving_static_resources
+
+## Web Server
 
 This is a simple example web server which efficiently serves files from the file system.
 
 It can also be configured to act as an event bus bridge - bridging the server side event bus to client side JavaScript.
 
-## Name
+### Name
 
 The module name is `web-server`.
 
-## Configuration
+### Configuration
 
 The web-server configuration is as follows:
 
@@ -51,11 +53,11 @@ The web-server configuration is as follows:
 * `auth_address`. The bridge can also call an authorisation manager to do authorisation. This is the address to which it will send authorisation messages. Default value is `vertx.basicauthmanager.authorise`.
 
 
-## Examples
+### Examples
 
 Here are some examples:
 
-### Simple static file web server
+#### Simple static file web server
 
 This serves files from the web directory
 
@@ -63,7 +65,7 @@ This serves files from the web directory
         "host": mycompany.com
     }
 
-### Simple https server
+#### Simple https server
 
     {
         "host": mycompany.com,
@@ -72,7 +74,7 @@ This serves files from the web directory
         "key_store_password": "sausages"
     }
 
-### Event bus bridge
+#### Event bus bridge
 
 Pure event bus bridge that doesn't serve static files
 
